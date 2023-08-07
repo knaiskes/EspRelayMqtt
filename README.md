@@ -8,7 +8,7 @@ Control relay devices through MQTT commands using an ESP8266 board
 |---------|-------|
 | 3.3v    | DC+   |
 | GND     | DC-   |
-| D2      | IN    |
+| D3      | IN    |
 
 # Quick start
 
