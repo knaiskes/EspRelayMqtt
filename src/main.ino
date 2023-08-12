@@ -10,7 +10,8 @@ const int mqtt_port = 1883;
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
-const char* topic = "";
+const char* topic = ""; // Example: relays/topic
+const char* mqttOnConnectMsg = "Successfully connected to MQTT broker";
 
 const int relay_pin = D3;
 
@@ -31,6 +32,7 @@ void setup() {
   client.setServer(mqtt_server, mqtt_port);
   while (!client.connected()) {
     if (client.connect("ESP8266Client", mqtt_username, mqtt_password)) {
+      client.publish(topic, mqttOnConnectMsg);
     } else {
       delay(2000);
     }
@@ -50,6 +52,7 @@ void reconnect() {
   while (!client.connected()) {
     if (client.connect("ESP8266Client", mqtt_username, mqtt_password)) {
       client.subscribe(topic);
+      client.publish(topic, mqttOnConnectMsg);
     } else {
       delay(2000);
     }
