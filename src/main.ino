@@ -12,6 +12,11 @@ const char* mqtt_password = "";
 
 const char* topic = ""; // Example: relays/topic
 const char* mqttOnConnectMsg = "Successfully connected to MQTT broker";
+char mqttPingTopic[50];
+const char* mqttTopicPingSuffix = "/ping";
+
+unsigned long lastMessageTime = 0;
+const unsigned long interval = 20000; // 20 seconds
 
 const int relay_pin = D3;
 
@@ -21,6 +26,8 @@ WiFiClient espClient;
 PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 
 void setup() {
+  strcpy(mqttPingTopic, topic);
+  strcat(mqttPingTopic, mqttTopicPingSuffix);
   pinMode(relay_pin, OUTPUT);
   digitalWrite(relay_pin, HIGH);
 
@@ -44,6 +51,11 @@ void setup() {
 void loop() {
   if (!client.connected()) {
     reconnect();
+  }
+  unsigned long currentTime = millis();
+  if (currentTime - lastMessageTime >= interval) {
+    sendPing();
+    lastMessageTime = currentTime; // Update the last message time
   }
   client.loop();
 }
@@ -69,5 +81,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay_pin, LOW);
   } else if (message == "false") {
     digitalWrite(relay_pin, HIGH);
+  }
+}
+
+void sendPing() {
+  if (client.connected()) {
+    client.publish(mqttPingTopic, "ping");
   }
 }
