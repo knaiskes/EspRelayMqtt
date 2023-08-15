@@ -4,29 +4,29 @@
 const char* ssid = "";
 const char* password = "";
 
-const char* mqtt_server = "";
-const int mqtt_port = 1883;
+const char* mqttServer = "";
+const int mqttPort = 1883;
 
-const char* mqtt_username = "";
-const char* mqtt_password = "";
+const char* mqttUsername = "";
+const char* mqttPassword = "";
 
-const char* topic = ""; // Example: relays/topic
+const char* mqttTopic = ""; // Example: relays/topic
 const char* mqttOnConnectMsg = "Successfully connected to MQTT broker";
 char mqttPingTopic[50];
 const char* mqttTopicPingSuffix = "/ping";
 
-unsigned long lastMessageTime = 0;
-const unsigned long interval = 20000; // 20 seconds
+unsigned long lastMqttMessageTime = 0;
+const unsigned long mqttPingInterval = 20000; // 20 seconds
 
 const int relay_pin = D3;
 
-void callback(char* topic, byte* payload, unsigned int length);
+void callback(char* mqttTopic, byte* payload, unsigned int length);
 
 WiFiClient espClient;
-PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
+PubSubClient client(mqttServer, mqttPort, callback, espClient);
 
 void setup() {
-  strcpy(mqttPingTopic, topic);
+  strcpy(mqttPingTopic, mqttTopic);
   strcat(mqttPingTopic, mqttTopicPingSuffix);
   pinMode(relay_pin, OUTPUT);
   digitalWrite(relay_pin, HIGH);
@@ -36,16 +36,16 @@ void setup() {
     delay(1000);
   }
 
-  client.setServer(mqtt_server, mqtt_port);
+  client.setServer(mqttServer, mqttPort);
   while (!client.connected()) {
-    if (client.connect("ESP8266Client", mqtt_username, mqtt_password)) {
-      client.publish(topic, mqttOnConnectMsg);
+    if (client.connect("ESP8266Client", mqttUsername, mqttPassword)) {
+      client.publish(mqttTopic, mqttOnConnectMsg);
     } else {
       delay(2000);
     }
   }
 
-  client.subscribe(topic);
+  client.subscribe(mqttTopic);
 }
 
 void loop() {
@@ -53,25 +53,25 @@ void loop() {
     reconnect();
   }
   unsigned long currentTime = millis();
-  if (currentTime - lastMessageTime >= interval) {
+  if (currentTime - lastMqttMessageTime >= mqttPingInterval) {
     sendPing();
-    lastMessageTime = currentTime; // Update the last message time
+    lastMqttMessageTime = currentTime; // Update the last message time
   }
   client.loop();
 }
 
 void reconnect() {
   while (!client.connected()) {
-    if (client.connect("ESP8266Client", mqtt_username, mqtt_password)) {
-      client.subscribe(topic);
-      client.publish(topic, mqttOnConnectMsg);
+    if (client.connect("ESP8266Client", mqttUsername, mqttPassword)) {
+      client.subscribe(mqttTopic);
+      client.publish(mqttTopic, mqttOnConnectMsg);
     } else {
       delay(2000);
     }
   }
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char* mqttTopic, byte* payload, unsigned int length) {
   String message = "";
   for (int i = 0; i < length; i++) {
     message += (char)payload[i];
